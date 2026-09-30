@@ -664,32 +664,281 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Responsividade */
+    .mobile-menu-btn {
+      display: none;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .mobile-menu-btn:hover {
+      background: rgba(56, 189, 248, 0.25);
+    }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 998;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-backdrop.show {
+      display: block;
+      opacity: 1;
+    }
+
+    .sidebar-mobile-close {
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-mobile-close span {
+      font-weight: 700;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    .sidebar-mobile-close button {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .nav-center-pill {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: var(--accent-blue);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .nav-center-pill:hover {
+      background: #374151;
+    }
+    .pill-tap-hint {
+      font-size: 0.7rem;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .mobile-swipe-hint {
+      display: none;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-top: 10px;
+      user-select: none;
+      font-weight: 500;
+    }
+
+    /* Responsividade Aprimorada para Mobile e Tablets */
     @media (max-width: 900px) {
-      aside.sidebar {
+      .mobile-menu-btn {
+        display: inline-flex;
+      }
+      .mobile-swipe-hint {
+        display: block;
+      }
+      .keyboard-hint {
+        display: none !important;
+      }
+
+      header.topbar {
+        padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .brand {
+        font-size: 1.05rem;
+        gap: 8px;
+      }
+      .brand-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+        border-radius: 8px;
+      }
+      .brand-badge {
         display: none;
       }
-      main.main-content {
-        padding: 16px;
+      .top-actions {
+        gap: 8px;
+        flex-wrap: wrap;
       }
-      .slide-content-area {
-        padding: 20px;
+      .search-box {
+        order: 3;
+        width: 100%;
+        margin-top: 4px;
       }
       .search-box input {
-        width: 140px;
+        width: 100% !important;
+        font-size: 0.85rem;
+        padding: 8px 12px 8px 34px;
+      }
+      .mode-btn {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+      }
+
+      /* Sidebar vira gaveta móvel (drawer) */
+      aside.sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        max-height: 100vh;
+        width: 82%;
+        max-width: 310px;
+        z-index: 999;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 12px 0 35px rgba(0, 0, 0, 0.8);
+        padding-top: 16px;
+      }
+      aside.sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-mobile-close {
+        display: flex;
+      }
+
+      main.main-content {
+        padding: 12px 10px 60px 10px;
+        max-width: 100%;
+      }
+
+      .slide-card {
+        min-height: auto;
+        border-radius: 14px;
+      }
+      .slide-top {
+        padding: 12px 14px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .unit-pill {
+        font-size: 0.72rem;
+        padding: 3px 10px;
+      }
+      .slide-time {
+        font-size: 0.75rem;
+      }
+
+      .slide-content-area {
+        padding: 18px 14px;
+      }
+      .lesson-title {
+        font-size: 1.35rem;
+        line-height: 1.3;
+      }
+      .lesson-subtitle {
+        font-size: 0.88rem;
+        margin-bottom: 14px;
+      }
+
+      .box-didatico {
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        gap: 10px;
+        margin: 12px 0;
+      }
+      .box-didatico .box-icon {
+        font-size: 1.2rem;
+      }
+
+      .code-top-bar {
+        padding: 8px 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .code-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+      pre.code-block {
+        font-size: 0.8rem;
+        padding: 12px;
+        line-height: 1.45;
+      }
+
+      .slide-footer-nav {
+        padding: 12px 14px;
+        gap: 6px;
+      }
+      .nav-btn-big {
+        padding: 9px 14px;
+        font-size: 0.85rem;
+        min-height: 44px;
+      }
+      .nav-center-pill {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+
+      .quiz-card {
+        padding: 14px;
+        margin-top: 16px;
+        border-radius: 12px;
+      }
+      .quiz-title {
+        font-size: 0.95rem;
+      }
+      .quiz-opt {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        min-height: 44px;
+      }
+
+      .article-section {
+        padding: 20px 14px;
+        border-radius: 12px;
+        margin-bottom: 18px;
       }
     }
   </style>
 </head>
 <body>
 
+  <!-- Backdrop para fechar menu gaveta no celular -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
   <!-- Topbar -->
   <header class="topbar">
-    <div class="brand">
-      <div class="brand-icon">🐍</div>
-      <div>
-        <span>Python Master</span>
-        <span class="brand-badge">Faculdade & Colab</span>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="mobile-menu-btn" onclick="toggleSidebar(true)" aria-label="Abrir Menu de Aulas">
+        ☰ Aulas
+      </button>
+      <div class="brand">
+        <div class="brand-icon">🐍</div>
+        <div>
+          <span>Python Master</span>
+          <span class="brand-badge">Faculdade & Colab</span>
+        </div>
       </div>
     </div>
 
@@ -709,8 +958,12 @@
   <!-- Layout Principal -->
   <div class="app-layout">
     
-    <!-- Sidebar Navegável -->
-    <aside class="sidebar">
+    <!-- Sidebar Navegável (Gaveta no Mobile) -->
+    <aside class="sidebar" id="appSidebar">
+      <div class="sidebar-mobile-close">
+        <span>📚 Ementa de Aulas</span>
+        <button onclick="toggleSidebar(false)">✕ Fechar</button>
+      </div>
       <div class="progress-widget">
         <div class="progress-info">
           <span>Progresso do Conteúdo</span>
@@ -1780,20 +2033,30 @@ OK</div>
             </div>
           </div>
 
-          <!-- Rodapé de Navegação do Slide -->
+          <!-- Rodapé de Navegação do Slide Touch-Friendly -->
           <div class="slide-footer-nav">
             <button class="nav-btn-big nav-btn-prev" id="prevBtn" onclick="changeSlide(-1)" disabled>
-              ← Aula Anterior
+              ← <span class="nav-btn-label">Anterior</span>
+            </button>
+
+            <!-- Botão Central que abre o menu gaveta no celular -->
+            <button class="nav-center-pill" id="mobileCounterBtn" onclick="toggleSidebar(true)" title="Toque para ver todas as aulas">
+              <span id="slideCounterText">Aula 1 / 20</span>
+              <span class="pill-tap-hint">☰ Aulas</span>
             </button>
 
             <div class="keyboard-hint">
-              <span>Navegue também pelas setas</span>
+              <span>Navegue pelas setas</span>
               <kbd>←</kbd> <kbd>→</kbd> <kbd>Espaço</kbd>
             </div>
 
             <button class="nav-btn-big" id="nextBtn" onclick="changeSlide(1)">
-              Próxima Aula →
+              <span class="nav-btn-label">Próxima</span> →
             </button>
+          </div>
+
+          <div class="mobile-swipe-hint">
+            👈 Deslize o dedo na tela para trocar de aula 👉
           </div>
 
         </div>
@@ -2035,6 +2298,25 @@ OK</div>
     const progressText = document.getElementById('progressText');
     const navItems = document.querySelectorAll('.nav-item');
 
+    // Controle da Gaveta Lateral (Drawer) no Mobile
+    function toggleSidebar(forceState) {
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (!sidebar) return;
+      const isOpen = sidebar.classList.contains('open');
+      const shouldOpen = (forceState !== undefined) ? forceState : !isOpen;
+
+      if (shouldOpen) {
+        sidebar.classList.add('open');
+        if (backdrop) backdrop.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      } else {
+        sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    }
+
     // Inicialização
     function showSlide(index) {
       currentSlide = index;
@@ -2053,6 +2335,12 @@ OK</div>
       progressBar.style.width = pct + '%';
       progressText.textContent = `${index + 1} / ${totalSlides} (${pct}%)`;
 
+      // Atualiza botão central touch do mobile
+      const slideCounterText = document.getElementById('slideCounterText');
+      if (slideCounterText) {
+        slideCounterText.textContent = `Aula ${index + 1} / ${totalSlides}`;
+      }
+
       // Atualiza Sidebar
       navItems.forEach((item, i) => {
         item.classList.toggle('active', i === index);
@@ -2061,8 +2349,10 @@ OK</div>
       // Renderiza Quiz do Slide Atual
       renderQuiz(index);
 
-      // Scroll suave para o topo do card
-      document.querySelector('.slide-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Scroll suave para o topo do card apenas em telas maiores para não desorientar no celular
+      if (window.innerWidth > 768) {
+        document.querySelector('.slide-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     function changeSlide(delta) {
@@ -2074,6 +2364,7 @@ OK</div>
 
     function goToSlide(index) {
       showSlide(index);
+      toggleSidebar(false); // Fecha a gaveta no celular após escolher a aula
       if (document.getElementById('deckContainer').style.display === 'none') {
         setMode('deck');
       }
@@ -2224,6 +2515,41 @@ OK</div>
         changeSlide(-1);
       }
     });
+
+    // Detecção de Gestos Touch (Swipe) para Navegação em Celulares e Tablets
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    const deckCard = document.querySelector('.slide-card');
+    if (deckCard) {
+      deckCard.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+
+      deckCard.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipeGesture();
+      }, { passive: true });
+    }
+
+    function handleSwipeGesture() {
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+      // Garante que o movimento foi predominantemente horizontal (>45px) e não vertical
+      if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX < 0) {
+          // Deslizou para a esquerda -> Próxima aula
+          changeSlide(1);
+        } else {
+          // Deslizou para a direita -> Aula anterior
+          changeSlide(-1);
+        }
+      }
+    }
 
     // Início
     showSlide(0);
