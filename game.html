@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyQuest: As Crônicas dos Dados | RPG Gamificado de Python</title>
+  
+  <!-- Fontes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <!-- Pyodide para execução segura de Python no navegador -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+
+  <style>
+    :root {
+      /* Paleta Oficial Obrigatória */
+      --jet-black: #022b3a;
+      --teal: #1f7a8c;
+      --pale-sky: #bfdbf7;
+      --lavender: #e1e5f2;
+      --white: #ffffff;
+
+      /* Mapeamento Semântico */
+      --bg-dark: #011d27;
+      --bg-card: #033649;
+      --bg-card-hover: #054861;
+      --border-soft: rgba(191, 219, 247, 0.2);
+      --border-glow: #1f7a8c;
+      --danger: #ff5964;
+      --success: #35b276;
+      --warning: #f4a261;
+      --gold: #ffd166;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--jet-black);
+      color: var(--white);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top HUD */
+    header.hud-bar {
+      background: rgba(2, 43, 58, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid var(--border-soft);
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .game-logo {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.95rem;
+      color: var(--pale-sky);
+      text-shadow: 0 0 10px rgba(31, 122, 140, 0.8);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-tag {
+      background: var(--teal);
+      color: var(--white);
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Player Stats HUD */
+    .player-stats {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .avatar-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(31, 122, 140, 0.25);
+      border: 1px solid var(--teal);
+      padding: 6px 14px;
+      border-radius: 30px;
+    }
+
+    .avatar-icon {
+      font-size: 1.5rem;
+    }
+
+    .avatar-info .player-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--pale-sky);
+    }
+
+    .avatar-info .player-rank {
+      font-size: 0.72rem;
+      color: var(--lavender);
+    }
+
+    /* Metric Bars */
+    .metric-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .metric-box {
+      min-width: 140px;
+    }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--lavender);
+    }
+
+    .metric-bar-bg {
+      background: rgba(1, 29, 39, 0.8);
+      border: 1px solid var(--border-soft);
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.4s ease-in-out, background-color 0.3s;
+    }
+
+    .fill-xp {
+      background: linear-gradient(90deg, #1f7a8c, #bfdbf7);
+    }
+
+    .fill-battery {
+      background: linear-gradient(90deg, #35b276, #bfdbf7);
+    }
+
+    .battery-low {
+      background: linear-gradient(90deg, #ff5964, #f4a261) !important;
+      animation: pulse-red 1.2s infinite;
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .bits-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 209, 102, 0.15);
+      border: 1px solid rgba(255, 209, 102, 0.4);
+      color: var(--gold);
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-nav-deck {
+      background: transparent;
+      border: 1px solid var(--border-soft);
+      color: var(--pale-sky);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-nav-deck:hover {
+      background: rgba(31, 122, 140, 0.3);
+      border-color: var(--pale-sky);
+      color: var(--white);
+    }
+
+    .btn-repair {
+      background: linear-gradient(135deg, #1f7a8c, #033649);
+      border: 1px solid var(--pale-sky);
+      color: var(--white);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-repair:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(31, 122, 140, 0.5);
+    }
+
+    /* Main Container */
+    main.game-container {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      main.game-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Sidebar: World & Missions */
+    .missions-sidebar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: fit-content;
+    }
+
+    .world-banner {
+      background: linear-gradient(135deg, rgba(31, 122, 140, 0.4), rgba(1, 29, 39, 0.8));
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .world-banner .world-icon {
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+    }
+
+    .world-banner h2 {
+      font-size: 1.15rem;
+      color: var(--pale-sky);
+      margin-bottom: 4px;
+    }
+
+    .world-banner p {
+      font-size: 0.78rem;
+      color: var(--lavender);
+    }
+
+    .missions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .missions-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .missions-list::-webkit-scrollbar-thumb {
+      background: var(--teal);
+      border-radius: 4px;
+    }
+
+    .mission-card {
+      background: rgba(1, 29, 39, 0.6);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mission-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--pale-sky);
+      transform: translateX(3px);
+    }
+
+    .mission-card.active {
+      background: rgba(31, 122, 140, 0.35);
+      border-color: var(--pale-sky);
+      box-shadow: 0 0 12px rgba(31, 122, 140, 0.4);
+    }
+
+    .mission-card.completed {
+      border-left: 4px solid var(--success);
+    }
+
+    .mission-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .mission-card .mission-num {
+      font-size: 0.7rem;
+      color: var(--pale-sky);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .mission-card .mission-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .mission-status-icon {
+      font-size: 1.1rem;
+    }
+
+    /* Right Console: Active Mission & Datapad */
+    .datapad-console {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* NPC Story Box */
+    .npc-dialog-box {
+      background: rgba(1, 29, 39, 0.8);
+      border: 1px solid var(--border-soft);
+      border-left: 4px solid var(--teal);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .npc-avatar-box {
+      background: var(--teal);
+      color: var(--white);
+      font-size: 2rem;
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .npc-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .npc-name {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--pale-sky);
+    }
+
+    .npc-speech {
+      font-style: italic;
+      color: var(--lavender);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .mission-goal {
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border-soft);
+      font-size: 0.85rem;
+      color: var(--white);
+    }
+    .mission-goal strong {
+      color: var(--gold);
+    }
+
+    /* Pedagogical Book Citation Pill */
+    .pedagogical-ref {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(191, 219, 247, 0.08);
+      border: 1px solid rgba(191, 219, 247, 0.2);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      color: var(--pale-sky);
+    }
+
+    .pedagogical-ref strong {
+      color: var(--white);
+    }
+
+    /* Editor Section */
+    .editor-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .editor-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--lavender);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-editor-action {
+      background: rgba(1, 29, 39, 0.8);
+      border: 1px solid var(--border-soft);
+      color: var(--lavender);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-editor-action:hover {
+      background: var(--bg-card-hover);
+      color: var(--white);
+    }
+
+    .code-editor-wrapper {
+      position: relative;
+      border: 1px solid var(--teal);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #01161e;
+    }
+
+    textarea#codeEditor {
+      width: 100%;
+      height: 190px;
+      background: transparent;
+      color: #bfdbf7;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      padding: 16px;
+      border: none;
+      resize: vertical;
+      outline: none;
+    }
+
+    /* Run & Controls */
+    .controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-run-code {
+      background: linear-gradient(135deg, #1f7a8c, #2699b0);
+      border: none;
+      color: var(--white);
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 12px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(31, 122, 140, 0.5);
+    }
+
+    .btn-run-code:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(31, 122, 140, 0.7);
+    }
+
+    .btn-run-code:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .pyodide-status {
+      font-size: 0.78rem;
+      color: var(--lavender);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warning);
+    }
+
+    .status-dot.ready {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    /* Terminal Output */
+    .terminal-window {
+      background: #011219;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: #02202c;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--pale-sky);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .terminal-content {
+      padding: 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      min-height: 110px;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: var(--lavender);
+    }
+
+    .terminal-content .log-success {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .terminal-content .log-error {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .terminal-content .log-info {
+      color: var(--pale-sky);
+    }
+
+    /* Modal de Reforço Adaptativo (Repair Station) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(1, 29, 39, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 2px solid var(--teal);
+      border-radius: 16px;
+      max-width: 680px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      color: var(--pale-sky);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: var(--lavender);
+      font-size: 1.3rem;
+      cursor: pointer;
+    }
+
+    .repair-challenge-box {
+      background: #01161e;
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: #ff5964;
+    }
+
+    .repair-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .repair-option-btn {
+      background: rgba(1, 29, 39, 0.7);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--white);
+      text-align: left;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .repair-option-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--pale-sky);
+    }
+
+    /* Modal de Level Up / Fanfarra */
+    .levelup-modal {
+      text-align: center;
+      background: radial-gradient(circle, #054861, #022b3a);
+      border: 2px solid var(--gold);
+      padding: 32px 24px;
+    }
+
+    .levelup-trophy {
+      font-size: 4rem;
+      animation: bounce 1s infinite alternate;
+      margin-bottom: 12px;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-12px); }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--teal);
+      border-radius: 10px;
+      padding: 14px 20px;
+      color: var(--white);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 300;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.88rem;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & Gamified HUD -->
+  <header class="hud-bar">
+    <div class="brand-group">
+      <div class="game-logo">
+        <span>⚔️ PYQUEST</span>
+      </div>
+      <span class="brand-tag">As Crônicas dos Dados</span>
+    </div>
+
+    <!-- HUD do Jogador -->
+    <div class="player-stats">
+      <div class="avatar-badge">
+        <span class="avatar-icon">🧙‍♂️</span>
+        <div class="avatar-info">
+          <div class="player-name" id="hudName">MagoDoPython</div>
+          <div class="player-rank" id="hudRank">Patente: Júnior (Nv. 1)</div>
+        </div>
+      </div>
+
+      <!-- Barra de XP -->
+      <div class="metric-box">
+        <div class="metric-header">
+          <span>XP</span>
+          <span id="hudXpText">0 / 100</span>
+        </div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill fill-xp" id="hudXpBar" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Barra de Bateria do Datapad -->
+      <div class="metric-box">
+        <div class="metric-header">
+          <span>⚡ BATERIA</span>
+          <span id="hudBatteryText">100%</span>
+        </div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-fill fill-battery" id="hudBatteryBar" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Moedas Bits -->
+      <div class="bits-badge">
+        <span>🪙</span>
+        <span id="hudBitsText">50 Bits</span>
+      </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="hud-actions">
+      <button class="btn-repair" id="btnOpenRepair">
+        <span>🔧</span> Recarregar Bateria
+      </button>
+      <a href="index.html" class="btn-nav-deck">
+        <span>📚</span> Ver Slides
+      </a>
+    </div>
+  </header>
+
+  <!-- Container Principal do Jogo -->
+  <main class="game-container">
+    
+    <!-- Painel Lateral: Missões do Vilarejo -->
+    <aside class="missions-sidebar">
+      <div class="world-banner">
+        <div class="world-icon">🏡</div>
+        <h2>Vilarejo de Valedados</h2>
+        <p>Mundo 1 • Níveis 1 a 50 (Júnior)<br>Fundamentos, tipos, laços e ciência básica.</p>
+      </div>
+
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--pale-sky); text-transform: uppercase;">
+        Missões Disponíveis
+      </div>
+
+      <div class="missions-list" id="missionsList">
+        <!-- Injetado dinamicamente via JS -->
+      </div>
+    </aside>
+
+    <!-- Console Central: Datapad do Aluno -->
+    <section class="datapad-console">
+      
+      <!-- Caixa de Diálogo com NPC -->
+      <div class="npc-dialog-box">
+        <div class="npc-avatar-box" id="npcAvatar">🧔</div>
+        <div class="npc-content">
+          <div class="npc-name" id="npcName">Seu Zé do Armazém</div>
+          <div class="npc-speech" id="npcSpeech">
+            "Ô criatura! Chegaram três caixas de laranjas e preciso registrar o peso em quilos e o preço unitário para não tomar prejuízo!"
+          </div>
+          <div class="mission-goal" id="missionGoal">
+            <strong>Objetivo:</strong> Crie as variáveis <code>peso_kg = 12.5</code> e <code>preco_por_kg = 4.20</code> e calcule <code>total_compra</code>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Citação Teórica Pedagógica dos Livros -->
+      <div class="pedagogical-ref">
+        <span>📖</span>
+        <span id="missionRefLivro"><strong>Referência:</strong> Começando a Programar em Python Para Leigos, Cap. 5 ("Armazenando Informações")</span>
+      </div>
+
+      <!-- Editor de Código -->
+      <div class="editor-section">
+        <div class="editor-header">
+          <div class="editor-title">
+            <span>💻 Terminal Datapad (Python 3.12 WebAssembly)</span>
+          </div>
+          <div class="editor-actions">
+            <button class="btn-editor-action" id="btnResetCode">Restaurar Código</button>
+            <button class="btn-editor-action" id="btnCopyColab">Copiar p/ Colab</button>
+          </div>
+        </div>
+
+        <div class="code-editor-wrapper">
+          <textarea id="codeEditor" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <!-- Linha de Controles & Execução -->
+      <div class="controls-row">
+        <button class="btn-run-code" id="btnRunCode">
+          <span>⚡</span> Executar no Datapad
+        </button>
+
+        <div class="pyodide-status">
+          <span class="status-dot" id="pyodideDot"></span>
+          <span id="pyodideStatusText">Carregando motor Python...</span>
+        </div>
+      </div>
+
+      <!-- Terminal de Saída -->
+      <div class="terminal-window">
+        <div class="terminal-bar">
+          <span>CONSOLE DE SAÍDA & TESTES</span>
+          <span id="backendStatusTag" style="color: var(--lavender); font-weight: normal; font-size: 0.7rem;">Modo Local Ativo</span>
+        </div>
+        <div class="terminal-content" id="terminalOutput">Aguardando execução do código...</div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal: Treino de Reforço Adaptativo (Para Curar Bateria e Consertar Erros) -->
+  <div class="modal-overlay" id="repairModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🔧 Oficina de Reforço Adaptativo</span>
+        </div>
+        <button class="btn-close-modal" id="btnCloseRepair">&times;</button>
+      </div>
+
+      <p style="font-size: 0.88rem; color: var(--lavender);">
+        Identificamos um padrão de erro frequente. Conserte o trecho de código abaixo para regenerar <strong>+35% de Bateria</strong> e ganhar <strong>+40 XP</strong>!
+      </p>
+
+      <div style="font-weight: 700; color: var(--pale-sky); font-size: 0.9rem;" id="repairTitle">
+        Treino: O Sinal Perdido
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--white);" id="repairPrompt">
+        Conserte a verificação lógica. O código abaixo está usando atribuição (=) em vez de comparação (==)!
+      </p>
+
+      <div class="repair-challenge-box" id="repairBuggyCode">
+        if nivel = 10:
+            print("Parabéns")
+      </div>
+
+      <div class="repair-options" id="repairOptions">
+        <!-- Injetado dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Level Up Celebration -->
+  <div class="modal-overlay" id="levelupModal">
+    <div class="modal-card levelup-modal">
+      <div class="levelup-trophy">🏆</div>
+      <h2 style="color: var(--gold); font-size: 1.6rem; margin-bottom: 8px;">SUBIU DE NÍVEL!</h2>
+      <p style="color: var(--white); font-size: 1.1rem; margin-bottom: 12px;" id="levelupText">
+        Você alcançou o Nível 2!
+      </p>
+      <p style="color: var(--pale-sky); font-size: 0.88rem; margin-bottom: 24px;">
+        Suas habilidades computacionais estão evoluindo. Continue explorando o Vilarejo de Valedados!
+      </p>
+      <button class="btn-run-code" style="margin: 0 auto;" id="btnCloseLevelup">
+        Continuar Jornada
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="gameToast">
+    <span id="toastIcon">✨</span>
+    <span id="toastMessage">Notificação do jogo</span>
+  </div>
+
+  <script>
+    // =================================================================
+    // BANCO DE DADOS EM MEMÓRIA & CONFIGURAÇÕES DAS MISSÕES
+    // Fundamentadas nos 5 livros de referência teórica
+    // =================================================================
+    const MISSOES_MUNDO_1 = [
+      {
+        id: 1,
+        ordem: 1,
+        titulo: "A Balança da Mercearia",
+        npc_nome: "Seu Zé do Armazém",
+        npc_avatar: "🧔",
+        npc_dialogo: "Ô criatura! Chegaram três caixas de laranjas e preciso registrar o peso em quilos e o preço unitário para não tomar prejuízo!",
+        objetivo_historia: "Crie as variáveis `peso_kg = 12.5` e `preco_por_kg = 4.20`. Calcule o `total_compra` multiplicando os dois valores.",
+        codigo_inicial: "# Ajude o Seu Zé a definir as variáveis da balança:\npeso_kg = 12.5\npreco_por_kg = 4.20\n\n# Calcule o total_compra:\ntotal_compra = peso_kg * preco_por_kg\nprint(f\"Total: R$ {total_compra:.2f}\")",
+        assert_teste: `assert abs(total_compra - 52.5) < 0.01, "O total da compra deve ser R$ 52.50!"`,
+        dica_teorica: "Uma variável é como uma gaveta etiquetada na memória. Valores com casas decimais usam ponto (.) e são do tipo float.",
+        referencia_livro: "Começando a Programar em Python Para Leigos, Cap. 5",
+        topico_chave: "variaveis_float",
+        xp_recompensa: 100,
+        bits_recompensa: 25
+      },
+      {
+        id: 2,
+        ordem: 2,
+        titulo: "O Cofrinho da Turma",
+        npc_nome: "Bia da Pipoca",
+        npc_avatar: "🍿",
+        npc_dialogo: "Juntamos nossas moedas para comprar os ingressos do cinema! Mas precisamos calcular quanto sobra de troco certinho.",
+        objetivo_historia: "Calcule o troco: guarde o `valor_pago = 50.0` e o `custo_ingresso = 38.50`. Calcule o `troco` e exiba com uma f-string.",
+        codigo_inicial: "valor_pago = 50.0\ncusto_ingresso = 38.50\n\n# Calcule o troco:\ntroco = valor_pago - custo_ingresso\nprint(f\"Troco a devolver: R$ {troco:.2f}\")",
+        assert_teste: `assert abs(troco - 11.5) < 0.01, "O troco exato deve ser R$ 11.50!"`,
+        dica_teorica: "F-strings (PEP 498) permitem injetar variáveis dentro de textos: f\"Troco: {troco:.2f}\" formata com 2 casas decimais.",
+        referencia_livro: "Python: Escreva seus primeiros programas, Cap. 2",
+        topico_chave: "fstrings_operacoes",
+        xp_recompensa: 100,
+        bits_recompensa: 25
+      },
+      {
+        id: 3,
+        ordem: 3,
+        titulo: "A Catraca Justa do Parque",
+        npc_nome: "Fiscal Roberto",
+        npc_avatar: "🎫",
+        npc_dialogo: "A catraca do parque precisa de regras claras: menores de 5 anos não pagam nada (Gratuito), de 5 a 12 anos pagam meia (Meia-Entrada), e os demais pagam Inteira!",
+        objetivo_historia: "Use if/elif/else aplicando a regra da peneira para a variável `idade = 8`. Salve o resultado na variável `tipo_ingresso`.",
+        codigo_inicial: "idade = 8\n\n# Aplique a regra da peneira:\nif idade < 5:\n    tipo_ingresso = \"Gratuito\"\nelif idade <= 12:\n    tipo_ingresso = \"Meia-Entrada\"\nelse:\n    tipo_ingresso = \"Inteira\"\n\nprint(f\"Ingresso: {tipo_ingresso}\")",
+        assert_teste: `assert tipo_ingresso == "Meia-Entrada", "Para idade 8, o tipo deve ser Meia-Entrada!"`,
+        dica_teorica: "Na regra da peneira, condições mais restritivas devem vir primeiro para evitar que filtros maiores capturem o dado antes da hora.",
+        referencia_livro: "Pense em Python, Cap. 5 ('Condicionais')",
+        topico_chave: "condicionais_peneira",
+        xp_recompensa: 120,
+        bits_recompensa: 30
+      },
+      {
+        id: 4,
+        ordem: 4,
+        titulo: "O Robô Regador da Praça",
+        npc_nome: "Jardineira Dona Flor",
+        npc_avatar: "🌻",
+        npc_dialogo: "Nosso robô jardineiro precisa regar exatamente 5 canteiros numerados de 1 a 5. Sem um loop for, ele fica parado!",
+        objetivo_historia: "Crie um laço `for` com `range(1, 6)` que acumule o número total de canteiros regados em uma variável `canteiros_regados`.",
+        codigo_inicial: "canteiros_regados = 0\n\n# Use o for com range para regar os canteiros de 1 a 5:\nfor canteiro in range(1, 6):\n    print(f\"Regando canteiro {canteiro}...\")\n    canteiros_regados += 1\n\nprint(f\"Total regado: {canteiros_regados}\")",
+        assert_teste: `assert canteiros_regados == 5, "Devem ser regados exatamente 5 canteiros!"`,
+        dica_teorica: "A função range(inicio, fim) é exclusiva no final: range(1, 6) percorre 1, 2, 3, 4 e 5.",
+        referencia_livro: "Começando a Programar em Python Para Leigos, Cap. 7",
+        topico_chave: "lacos_range",
+        xp_recompensa: 120,
+        bits_recompensa: 30
+      },
+      {
+        id: 5,
+        ordem: 5,
+        titulo: "O Detector de Livros Perdidos",
+        npc_nome: "Bibliotecário Arquimedes",
+        npc_avatar: "📚",
+        npc_dialogo: "Alguém desarrumou a estante e colocou registros vazios (None) na lista de livros emprestados!",
+        objetivo_historia: "Filtre a lista `registros = ['Dom Casmurro', None, 'O Alquimista', None, 'Capitães da Areia']` criando `livros_validos` sem nenhum None.",
+        codigo_inicial: "registros = [\"Dom Casmurro\", None, \"O Alquimista\", None, \"Capitães da Areia\"]\nlivros_validos = []\n\n# Filtre os elementos que não são None:\nfor item in registros:\n    if item is not None:\n        livros_validos.append(item)\n\nprint(\"Livros válidos:\", livros_validos)",
+        assert_teste: `assert len(livros_validos) == 3 and None not in livros_validos, "A lista deve conter apenas os 3 livros válidos!"`,
+        dica_teorica: "Em ciência de dados, higienizar dados nulos é a primeira tarefa fundamental antes de qualquer análise séria.",
+        referencia_livro: "Data Science do Zero, Cap. 2 ('Curso Intensivo')",
+        topico_chave: "higienizacao_dados",
+        xp_recompensa: 150,
+        bits_recompensa: 40
+      },
+      {
+        id: 6,
+        ordem: 6,
+        titulo: "O Desafio do Mestre Júnior",
+        npc_nome: "Mestre Ada da Torre",
+        npc_avatar: "🏛️",
+        npc_dialogo: "Chegou a hora de provar que você é um Engenheiro Júnior de verdade. Crie uma função completa para a cidade!",
+        objetivo_historia: "Defina a função `calcular_desconto(preco, percentual)`. Se o percentual for menor que 0 ou maior que 100, retorne None.",
+        codigo_inicial: "def calcular_desconto(preco, percentual):\n    # Valide o percentual (entre 0 e 100):\n    if percentual < 0 or percentual > 100:\n        return None\n    desconto = preco * (percentual / 100)\n    return preco - desconto\n\n# Testando:\nresultado = calcular_desconto(100.0, 15)\nprint(\"Preço com desconto:\", resultado)",
+        assert_teste: `assert calcular_desconto(100.0, 20) == 80.0 and calcular_desconto(100.0, 150) is None, "A função deve calcular o desconto e validar os limites!"`,
+        dica_teorica: "Funções empacotam regras reutilizáveis através do comando def e devolvem resultados computados com return.",
+        referencia_livro: "Pense em Python, Cap. 3 ('Funções')",
+        topico_chave: "funcoes_retorno",
+        xp_recompensa: 200,
+        bits_recompensa: 50
+      }
+    ];
+
+    const TREINOS_REFORCO = [
+      {
+        id: 1,
+        titulo: "Treino: O Sinal Perdido",
+        topico: "comparacao_vs_atribuicao",
+        enunciado: "Conserte a verificação lógica. O código está usando atribuição (=) em vez de comparação (==)!",
+        codigo_com_erro: "if nivel = 10:\n    print('Parabéns')",
+        opcoes: [
+          { texto: "if nivel == 10:\n    print('Parabéns')", correta: true },
+          { texto: "if nivel === 10:\n    print('Parabéns')", correta: false },
+          { texto: "if nivel is = 10:\n    print('Parabéns')", correta: false }
+        ],
+        explicacao: "Em Python, um sinal (=) serve para atribuir valor, enquanto dois sinais (==) comparam igualdade lógica."
+      },
+      {
+        id: 2,
+        titulo: "Treino: O Portão dos Dois Pontos",
+        topico: "sintaxe_dois_pontos",
+        enunciado: "O programador se esqueceu do caractere obrigatório no final da linha do if!",
+        codigo_com_erro: "if pontuacao >= 100\n    print('Recorde!')",
+        opcoes: [
+          { texto: "if pontuacao >= 100;\n    print('Recorde!')", correta: false },
+          { texto: "if pontuacao >= 100:\n    print('Recorde!')", correta: true },
+          { texto: "if (pontuacao >= 100) {\n    print('Recorde!')", correta: false }
+        ],
+        explicacao: "Em Python, blocos de controle (if, for, while, def) obrigatoriamente terminam com dois pontos (:)."
+      },
+      {
+        id: 3,
+        titulo: "Treino: A Contagem Exata",
+        topico: "limites_range",
+        enunciado: "O laço for precisa contar de 1 até 10, mas parou no 9! Ajuste o range.",
+        codigo_com_erro: "for i in range(1, 10):\n    print(i)",
+        opcoes: [
+          { texto: "for i in range(1, 11):\n    print(i)", correta: true },
+          { texto: "for i in range(1, 9):\n    print(i)", correta: false },
+          { texto: "for i in range(0, 10):\n    print(i)", correta: false }
+        ],
+        explicacao: "O parâmetro final de range(inicio, fim) é exclusivo. Para incluir o 10, o limite deve ser 11."
+      }
+    ];
+
+    // Estado do Jogador
+    let jogador = {
+      id: 1,
+      apelido: "MagoDoPython",
+      patente: "Júnior",
+      nivel: 1,
+      xp_atual: 0,
+      xp_proximo_nivel: 100,
+      bateria_atual: 100,
+      bits_moedas: 50,
+      concluidas: new Set()
+    };
+
+    let missaoAtual = MISSOES_MUNDO_1[0];
+    let pyodideInstance = null;
+    let backendOnline = false;
+
+    // Elementos da Interface
+    const hudName = document.getElementById("hudName");
+    const hudRank = document.getElementById("hudRank");
+    const hudXpText = document.getElementById("hudXpText");
+    const hudXpBar = document.getElementById("hudXpBar");
+    const hudBatteryText = document.getElementById("hudBatteryText");
+    const hudBatteryBar = document.getElementById("hudBatteryBar");
+    const hudBitsText = document.getElementById("hudBitsText");
+    const missionsList = document.getElementById("missionsList");
+    const npcAvatar = document.getElementById("npcAvatar");
+    const npcName = document.getElementById("npcName");
+    const npcSpeech = document.getElementById("npcSpeech");
+    const missionGoal = document.getElementById("missionGoal");
+    const missionRefLivro = document.getElementById("missionRefLivro");
+    const codeEditor = document.getElementById("codeEditor");
+    const btnRunCode = document.getElementById("btnRunCode");
+    const btnResetCode = document.getElementById("btnResetCode");
+    const btnCopyColab = document.getElementById("btnCopyColab");
+    const terminalOutput = document.getElementById("terminalOutput");
+    const pyodideDot = document.getElementById("pyodideDot");
+    const pyodideStatusText = document.getElementById("pyodideStatusText");
+    const backendStatusTag = document.getElementById("backendStatusTag");
+
+    // Modais
+    const repairModal = document.getElementById("repairModal");
+    const btnOpenRepair = document.getElementById("btnOpenRepair");
+    const btnCloseRepair = document.getElementById("btnCloseRepair");
+    const repairTitle = document.getElementById("repairTitle");
+    const repairPrompt = document.getElementById("repairPrompt");
+    const repairBuggyCode = document.getElementById("repairBuggyCode");
+    const repairOptions = document.getElementById("repairOptions");
+
+    const levelupModal = document.getElementById("levelupModal");
+    const levelupText = document.getElementById("levelupText");
+    const btnCloseLevelup = document.getElementById("btnCloseLevelup");
+
+    // Inicialização do Pyodide
+    async function initPyodide() {
+      try {
+        pyodideInstance = await loadPyodide();
+        pyodideDot.classList.add("ready");
+        pyodideStatusText.innerText = "Python 3.12 Ativo (Wasm)";
+        logTerminal("✅ Motor Python pronto no Datapad! Pronto para programar.", "log-info");
+      } catch (err) {
+        pyodideStatusText.innerText = "Falha ao carregar Python";
+        logTerminal("❌ Erro ao inicializar Pyodide: " + err.message, "log-error");
+      }
+    }
+
+    // Testa se o backend Express + MySQL está no ar
+    async function checkBackend() {
+      try {
+        const res = await fetch("http://localhost:3001/api/status");
+        if (res.ok) {
+          const data = await res.json();
+          backendOnline = true;
+          backendStatusTag.innerHTML = `🟢 API Conectada (${data.banco})`;
+          backendStatusTag.style.color = "var(--success)";
+        }
+      } catch (e) {
+        backendOnline = false;
+        backendStatusTag.innerHTML = `🟡 Modo Navegador (Inicie 'node server.js' p/ MySQL)`;
+      }
+    }
+
+    // Renderiza Missões
+    function renderMissions() {
+      missionsList.innerHTML = "";
+      MISSOES_MUNDO_1.forEach((m) => {
+        const card = document.createElement("div");
+        const isCompleted = jogador.concluidas.has(m.id);
+        const isActive = missaoAtual.id === m.id;
+
+        card.className = `mission-card ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`;
+        card.innerHTML = `
+          <div class="mission-title-group">
+            <span class="mission-num">Missão #${m.ordem}</span>
+            <span class="mission-name">${m.titulo}</span>
+          </div>
+          <span class="mission-status-icon">${isCompleted ? '✅' : '🔒'}</span>
+        `;
+
+        card.addEventListener("click", () => selecionarMissao(m));
+        missionsList.appendChild(card);
+      });
+    }
+
+    // Seleciona uma Missão
+    function selecionarMissao(m) {
+      missaoAtual = m;
+      npcAvatar.innerText = m.npc_avatar;
+      npcName.innerText = m.npc_nome;
+      npcSpeech.innerText = `"${m.npc_dialogo}"`;
+      missionGoal.innerHTML = `<strong>Objetivo:</strong> ${m.objetivo_historia}`;
+      missionRefLivro.innerHTML = `<strong>Referência:</strong> ${m.referencia_livro} • <em>${m.dica_teorica}</em>`;
+      codeEditor.value = m.codigo_inicial;
+      renderMissions();
+      logTerminal(`📍 Missão carregada: "${m.titulo}". Leia a dica teórica e execute quando terminar!`, "log-info");
+    }
+
+    // Atualiza HUD do Jogador
+    function atualizarHud() {
+      hudName.innerText = jogador.apelido;
+      hudRank.innerText = `Patente: ${jogador.patente} (Nv. ${jogador.nivel})`;
+      hudXpText.innerText = `${jogador.xp_atual} / ${jogador.xp_proximo_nivel}`;
+      const pctXp = Math.min(100, Math.floor((jogador.xp_atual / jogador.xp_proximo_nivel) * 100));
+      hudXpBar.style.width = `${pctXp}%`;
+
+      hudBatteryText.innerText = `${jogador.bateria_atual}%`;
+      hudBatteryBar.style.width = `${jogador.bateria_atual}%`;
+
+      if (jogador.bateria_atual <= 25) {
+        hudBatteryBar.classList.add("battery-low");
+      } else {
+        hudBatteryBar.classList.remove("battery-low");
+      }
+
+      hudBitsText.innerText = `${jogador.bits_moedas} Bits`;
+    }
+
+    // Exibe Toast
+    function showToast(icon, msg) {
+      const toast = document.getElementById("gameToast");
+      document.getElementById("toastIcon").innerText = icon;
+      document.getElementById("toastMessage").innerText = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    // Log no Terminal
+    function logTerminal(msg, className = "") {
+      const div = document.createElement("div");
+      if (className) div.className = className;
+      div.innerText = msg;
+      terminalOutput.appendChild(div);
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+    // Execução do Código Python
+    async function executarCodigo() {
+      if (!pyodideInstance) {
+        alert("Motor Python ainda está carregando. Aguarde alguns instantes!");
+        return;
+      }
+
+      if (jogador.bateria_atual <= 0) {
+        alert("⚡ Sua bateria está esgotada! Clique em 'Recarregar Bateria' para resolver um treino de reforço e continuar.");
+        abrirModalReforco();
+        return;
+      }
+
+      terminalOutput.innerHTML = "";
+      btnRunCode.disabled = true;
+      btnRunCode.innerText = "Executando...";
+
+      const codigoUsuario = codeEditor.value;
+      const scriptCompleto = `
+import sys
+from io import StringIO
+
+_stdout_buffer = StringIO()
+sys.stdout = _stdout_buffer
+
+try:
+${codigoUsuario.split('\n').map(l => '    ' + l).join('\n')}
+
+    # Teste de Validação Pedagógica
+    ${missaoAtual.assert_teste}
+    _teste_passou = True
+    _erro_msg = ""
+except Exception as _e:
+    _teste_passou = False
+    _erro_msg = str(_e)
+
+_saida_usuario = _stdout_buffer.getvalue()
+`;
+
+      try {
+        await pyodideInstance.runPythonAsync(scriptCompleto);
+        const passou = pyodideInstance.globals.get("_teste_passou");
+        const saidaUsuario = pyodideInstance.globals.get("_saida_usuario");
+        const erroMsg = pyodideInstance.globals.get("_erro_msg");
+
+        if (saidaUsuario) {
+          logTerminal("--- Saída do Programa ---\n" + saidaUsuario);
+        }
+
+        if (passou) {
+          logTerminal(`\n🎉 SUCESSO! Todos os testes da missão passaram!`, "log-success");
+          logTerminal(`+${missaoAtual.xp_recompensa} XP  |  +${missaoAtual.bits_recompensa} Bits`, "log-info");
+          
+          jogador.concluidas.add(missaoAtual.id);
+          jogador.xp_atual += missaoAtual.xp_recompensa;
+          jogador.bits_moedas += missaoAtual.bits_recompensa;
+
+          // Checa Level Up (Níveis 1 a 50 no MVP Júnior)
+          if (jogador.xp_atual >= jogador.xp_proximo_nivel) {
+            jogador.xp_atual -= jogador.xp_proximo_nivel;
+            jogador.nivel += 1;
+            jogador.xp_proximo_nivel = Math.floor(jogador.xp_proximo_nivel * 1.25);
+            dispararLevelUp(jogador.nivel);
+          }
+
+          showToast("🎉", `Missão "${missaoAtual.titulo}" Concluída!`);
+          renderMissions();
+          atualizarHud();
+
+          // Sincroniza com Backend se estiver online
+          if (backendOnline) {
+            fetch("http://localhost:3001/api/missoes/submeter", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                jogador_id: jogador.id,
+                missao_id: missaoAtual.id,
+                codigo_usuario: codigoUsuario,
+                sucesso: true,
+                topico_chave: missaoAtual.topico_chave
+              })
+            }).catch(e => console.log(e));
+          }
+
+        } else {
+          // Falha: Bateria -10%
+          jogador.bateria_atual = Math.max(0, jogador.bateria_atual - 10);
+          logTerminal(`\n❌ FALHA NO TESTE: ${erroMsg}`, "log-error");
+          logTerminal(`⚡ Bateria do Datapad drenada em -10% (Restante: ${jogador.bateria_atual}%)`, "log-error");
+          logTerminal(`💡 Dica: ${missaoAtual.dica_teorica}`, "log-info");
+          
+          showToast("⚡", "Erro no código! Bateria -10%");
+          atualizarHud();
+
+          if (jogador.bateria_atual === 0) {
+            logTerminal("⚠️ Bateria em 0%! Acesse a Oficina de Reforço para recuperar energia.", "log-error");
+            setTimeout(abrirModalReforco, 1200);
+          }
+
+          if (backendOnline) {
+            fetch("http://localhost:3001/api/missoes/submeter", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                jogador_id: jogador.id,
+                missao_id: missaoAtual.id,
+                codigo_usuario: codigoUsuario,
+                sucesso: false,
+                erro_tipo: "AssertionError",
+                mensagem_erro: erroMsg,
+                topico_chave: missaoAtual.topico_chave
+              })
+            }).catch(e => console.log(e));
+          }
+        }
+
+      } catch (err) {
+        logTerminal(`❌ Erro de Sintaxe / Execução:\n${err.message}`, "log-error");
+        jogador.bateria_atual = Math.max(0, jogador.bateria_atual - 10);
+        atualizarHud();
+      } finally {
+        btnRunCode.disabled = false;
+        btnRunCode.innerHTML = "<span>⚡</span> Executar no Datapad";
+      }
+    }
+
+    // Modal de Subida de Nível
+    function dispararLevelUp(novoNivel) {
+      levelupText.innerText = `Você alcançou o Nível ${novoNivel}!`;
+      levelupModal.classList.add("open");
+    }
+
+    // Modal de Reforço Adaptativo
+    function abrirModalReforco() {
+      const treino = TREINOS_REFORCO[Math.floor(Math.random() * TREINOS_REFORCO.length)];
+      repairTitle.innerText = treino.titulo;
+      repairPrompt.innerText = treino.enunciado;
+      repairBuggyCode.innerText = treino.codigo_com_erro;
+
+      repairOptions.innerHTML = "";
+      treino.opcoes.forEach(op => {
+        const btn = document.createElement("button");
+        btn.className = "repair-option-btn";
+        btn.innerText = op.texto;
+        btn.addEventListener("click", () => {
+          if (op.correta) {
+            jogador.bateria_atual = Math.min(100, jogador.bateria_atual + 35);
+            jogador.xp_atual += 40;
+            atualizarHud();
+            repairModal.classList.remove("open");
+            showToast("🔋", "Conserto realizado! +35% Bateria e +40 XP!");
+            logTerminal(`🔋 Datapad reparado com sucesso! Bateria restaurada para ${jogador.bateria_atual}%.`, "log-success");
+          } else {
+            alert("Opção incorreta! Observe atentamente a sintaxe da linguagem.");
+          }
+        });
+        repairOptions.appendChild(btn);
+      });
+
+      repairModal.classList.add("open");
+    }
+
+    // Event Listeners
+    btnRunCode.addEventListener("click", executarCodigo);
+    btnResetCode.addEventListener("click", () => {
+      codeEditor.value = missaoAtual.codigo_inicial;
+      logTerminal("🔄 Código restaurado para o padrão original da missão.", "log-info");
+    });
+    btnCopyColab.addEventListener("click", () => {
+      navigator.clipboard.writeText(codeEditor.value);
+      showToast("📋", "Código copiado para a Área de Transferência!");
+    });
+    btnOpenRepair.addEventListener("click", abrirModalReforco);
+    btnCloseRepair.addEventListener("click", () => repairModal.classList.remove("open"));
+    btnCloseLevelup.addEventListener("click", () => levelupModal.classList.remove("open"));
+
+    // Inicialização da Página
+    window.addEventListener("DOMContentLoaded", () => {
+      renderMissions();
+      selecionarMissao(MISSOES_MUNDO_1[0]);
+      atualizarHud();
+      initPyodide();
+      checkBackend();
+    });
+  </script>
+</body>
+</html>
